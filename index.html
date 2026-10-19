@@ -1,0 +1,494 @@
+<!doctype html>
+<html lang="ro">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Aplicația Auto Rulate</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Figtree:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: o singură coloană de telefon; pe desktop apare într-o ramă centrată. Un singur aspect, luminos, ales intenționat. */
+:root{
+  --bg:#F3F3EF; --outer:#E2E3DC; --surface:#FFFFFF; --ink:#15171A; --muted:#565A60;
+  --line:#E1E2DC; --accent:#C8361B; --accent-ink:#FFFFFF; --ph:#D8DAD4; --ok:#1E7A46;
+  --display:'Barlow Condensed','Arial Narrow',sans-serif;
+  --body:Figtree,'Segoe UI',system-ui,sans-serif;
+  color-scheme:light;
+}
+html,body{height:100%}
+body{background:var(--outer);color:var(--ink);font-family:var(--body);font-size:15px;-webkit-font-smoothing:antialiased}
+*{box-sizing:border-box}
+button,input,select{font-family:inherit;font-size:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.caption{display:none}
+.app{position:relative;height:100%;max-width:430px;margin:0 auto;background:var(--bg);display:flex;flex-direction:column;overflow:hidden}
+@media (min-width:700px){
+  body{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding-block:20px}
+  .caption{display:block;font-size:13px;color:var(--muted);letter-spacing:.3px}
+  .app{width:410px;height:min(860px,calc(100vh - 80px));margin:0;border-radius:40px;box-shadow:0 0 0 10px #15171A,0 30px 60px rgba(21,23,26,.25)}
+}
+.scroll{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch}
+.pad{padding-left:max(18px,env(safe-area-inset-left,0px));padding-right:max(18px,env(safe-area-inset-right,0px))}
+.stack{display:flex;flex-direction:column}
+.disp{font-family:var(--display);font-weight:700;text-transform:uppercase;letter-spacing:.3px;line-height:1}
+.muted{color:var(--muted)}
+.num{font-variant-numeric:tabular-nums}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* antet */
+.top{display:flex;justify-content:space-between;align-items:center;padding-top:22px}
+.brand{display:flex;align-items:baseline;gap:6px}
+.brand b{font-family:var(--display);font-size:26px;letter-spacing:.5px}
+.brand span{font-family:var(--display);font-weight:700;font-size:15px;color:var(--accent);letter-spacing:.5px}
+.iconbtn{position:relative;width:44px;height:44px;border-radius:22px;border:1px solid var(--line);background:var(--surface);display:flex;align-items:center;justify-content:center}
+.iconbtn .dot{position:absolute;top:8px;right:9px;min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:var(--accent);color:var(--accent-ink);font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;border:2px solid var(--surface)}
+h1.disp{font-size:38px;margin:0;text-wrap:balance}
+h2{margin:0;font-size:18px;font-weight:700}
+
+/* căutare */
+.search{display:flex;gap:10px}
+.search label{flex:1;display:flex;align-items:center;gap:10px;height:50px;padding:0 16px;border-radius:14px;background:var(--surface);border:1px solid var(--line)}
+.search input{flex:1;min-width:0;border:0;outline:none;background:transparent}
+.chips{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;margin-right:calc(-1 * max(18px,env(safe-area-inset-right,0px)));padding-right:18px}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex-shrink:0;height:38px;padding:0 16px;border-radius:19px;border:1px solid var(--line);background:var(--surface);font-weight:600;font-size:14px}
+.chip[aria-pressed="true"]{background:var(--ink);color:#fff;border-color:var(--ink)}
+
+/* banner rate */
+.promo{border-radius:20px;background:var(--ink);color:#fff;padding:18px 18px 18px 20px;display:flex;flex-direction:column;gap:12px}
+.promo .disp{font-size:25px;line-height:1.05}
+.promo small{color:#C9CBC5;font-size:13px}
+.promo-row{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.pill{display:inline-flex;align-items:center;justify-content:center;height:42px;padding:0 18px;border-radius:21px;border:0;background:var(--accent);color:var(--accent-ink);font-weight:700;font-size:14px}
+
+/* carduri */
+.card{position:relative;display:flex;background:var(--surface);border-radius:16px;border:1px solid var(--line)}
+.card-main{flex:1;min-width:0;display:flex;gap:14px;padding:10px;border:0;background:transparent;text-align:left}
+.thumb{width:112px;height:80px;flex-shrink:0;border-radius:10px;background:var(--ph);overflow:hidden}
+.thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.card-info{min-width:0;display:flex;flex-direction:column;justify-content:space-between;padding:2px 36px 2px 0}
+.card-info strong{font-size:15px}
+.card-info .muted{font-size:13px}
+.price{font-family:var(--display);font-weight:700;font-size:23px}
+.heart{position:absolute;top:6px;right:6px;width:40px;height:40px;border-radius:20px;border:0;background:transparent;display:flex;align-items:center;justify-content:center}
+.heart svg path{fill:none;stroke:var(--ink)}
+.heart[aria-pressed="true"] svg path{fill:var(--accent);stroke:var(--accent)}
+.empty{border:1px dashed #C9CBC3;border-radius:16px;padding:22px;text-align:center;color:var(--muted);font-size:14px;line-height:1.5}
+.linkbtn{border:0;background:transparent;font-weight:600;font-size:14px;text-decoration:underline;text-underline-offset:3px;padding:6px 0}
+.alertbar{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 14px;border-radius:14px;background:var(--surface);border:1px solid var(--line);font-size:14px}
+
+/* tab bar */
+.tabs{flex-shrink:0;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));background:var(--surface);border-top:1px solid var(--line);padding:8px 8px 14px}
+.tab{border:0;background:transparent;display:flex;flex-direction:column;align-items:center;gap:4px;font-size:11px;font-weight:600;color:var(--muted);padding:4px 0}
+.tab[aria-current="page"]{color:var(--accent);font-weight:700}
+
+/* detaliu */
+.hero{position:relative;height:270px;background:var(--ph);flex-shrink:0;overflow:hidden}
+.hero>img{width:100%;height:100%;object-fit:cover;object-position:center 40%;display:block}
+.hero-nav{position:absolute;top:16px;left:max(16px,env(safe-area-inset-left,0px));right:max(16px,env(safe-area-inset-right,0px));display:flex;justify-content:space-between}
+.hero-nav .iconbtn{border:0}
+.dots{position:absolute;bottom:34px;display:flex;gap:6px}
+.dots i{width:6px;height:6px;border-radius:3px;background:#fff;opacity:.6}
+.dots i:first-child{width:18px;opacity:1}
+.sheet-top{position:relative;margin-top:-22px;border-radius:24px 24px 0 0;background:var(--bg);padding-top:22px;padding-bottom:24px;gap:16px}
+.badges{display:flex;gap:8px;flex-wrap:wrap}
+.badge{height:28px;padding:0 12px;border-radius:14px;background:var(--surface);border:1px solid var(--line);font-size:12px;font-weight:600;display:inline-flex;align-items:center}
+.badge.dark{background:var(--ink);color:#fff;border-color:var(--ink)}
+.title-row{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap}
+.specs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.spec{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:11px 12px;display:flex;flex-direction:column;gap:3px;min-width:0}
+.spec span{font-size:12px;color:var(--muted)}
+.spec b{font-size:15px}
+.tile{border-radius:18px;background:var(--surface);border:1px solid var(--line);padding:16px;display:flex;gap:14px;align-items:center;width:100%;text-align:left}
+.tile .ico{width:46px;height:46px;flex-shrink:0;border-radius:14px;background:var(--bg);display:flex;align-items:center;justify-content:center}
+.tile .go{width:40px;height:40px;flex-shrink:0;border-radius:20px;background:var(--ink);display:flex;align-items:center;justify-content:center}
+.actions{flex-shrink:0;display:flex;gap:10px;padding-top:12px;padding-bottom:16px;background:var(--surface);border-top:1px solid var(--line)}
+.btn-main{flex:1;height:54px;border-radius:16px;border:0;background:var(--accent);color:var(--accent-ink);font-weight:700;font-size:16px;display:flex;align-items:center;justify-content:center;text-decoration:none}
+.btn-sq{width:54px;height:54px;flex-shrink:0;border-radius:16px;border:1px solid var(--line);background:var(--surface);display:flex;align-items:center;justify-content:center}
+
+/* formulare */
+.field{display:flex;flex-direction:column;gap:6px}
+.field label{font-size:13px;font-weight:600}
+.field input,.field select{height:50px;border-radius:12px;border:1px solid var(--line);background:var(--surface);padding:0 14px;width:100%}
+.box{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:18px;gap:16px}
+input[type=range]{width:100%;accent-color:var(--accent)}
+.seg{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
+.seg button{height:42px;border-radius:12px;border:1px solid var(--line);background:var(--surface);font-weight:600;font-size:14px}
+.seg button[aria-pressed="true"]{background:var(--ink);color:#fff;border-color:var(--ink)}
+.result{border-radius:18px;background:var(--ink);color:#fff;padding:18px 20px;gap:4px}
+.result .disp{font-size:44px}
+.result small{color:#C9CBC5;font-size:12px;line-height:1.45}
+.photos{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.photos .slot{aspect-ratio:1;max-width:100%;border-radius:12px;background:var(--surface);border:1px dashed #BFC1B9;display:flex;align-items:center;justify-content:center;overflow:hidden;font-size:11px;color:var(--muted)}
+.photos img{width:100%;height:100%;object-fit:cover}
+.upload{display:flex;align-items:center;justify-content:center;gap:8px;height:50px;border-radius:12px;border:1px solid var(--ink);font-weight:600;background:var(--surface)}
+.contact-row{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 0;border-top:1px solid var(--line)}
+.contact-row:first-child{border-top:0}
+.copy{height:36px;padding:0 14px;border-radius:18px;border:1px solid var(--line);background:var(--bg);font-weight:600;font-size:13px}
+.hours{display:grid;grid-template-columns:1fr auto;gap:6px 12px;font-size:14px}
+
+/* foaie de jos + toast */
+.backdrop{position:absolute;inset:0;background:rgba(21,23,26,.45);z-index:20}
+.sheet{position:absolute;left:0;right:0;bottom:0;z-index:21;background:var(--bg);border-radius:24px 24px 0 0;padding-top:10px;padding-bottom:22px;gap:16px;max-height:88%;overflow-y:auto;animation:up .22s ease-out}
+.grab{width:40px;height:5px;border-radius:3px;background:#C9CBC3;align-self:center}
+.days{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none}
+.days button{flex-shrink:0;width:62px;height:62px;border-radius:14px;border:1px solid var(--line);background:var(--surface);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:12px}
+.days button b{font-size:16px}
+.days button[aria-pressed="true"]{background:var(--ink);color:#fff;border-color:var(--ink)}
+.times{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.times button{height:42px;border-radius:12px;border:1px solid var(--line);background:var(--surface);font-weight:600}
+.times button[aria-pressed="true"]{background:var(--ink);color:#fff;border-color:var(--ink)}
+.done{align-items:center;text-align:center;gap:10px;padding-block:10px}
+.done .ok{width:64px;height:64px;border-radius:32px;background:var(--ok);display:flex;align-items:center;justify-content:center}
+.toast{position:absolute;top:16px;left:16px;right:16px;z-index:30;background:var(--ink);color:#fff;border-radius:14px;padding:13px 16px;font-size:14px;font-weight:600;animation:drop .2s ease-out}
+.demo-note{font-size:12px;color:var(--muted)}
+@keyframes up{from{transform:translateY(30px);opacity:0}to{transform:none;opacity:1}}
+@keyframes drop{from{transform:translateY(-10px);opacity:0}to{transform:none;opacity:1}}
+@media (prefers-reduced-motion:reduce){.sheet,.toast{animation:none}}
+</style>
+</head>
+<body>
+
+
+<p class="caption">Prototip aplicație mobilă · Auto Rulate Bacău</p>
+<div class="app" id="app">
+  <div class="scroll" id="scroll"></div>
+  <div class="pad actions" id="actions" hidden></div>
+  <nav class="tabs" id="tabs" aria-label="Meniu principal"></nav>
+</div>
+
+<script>
+(function(){
+const ICON = {
+  car:'<path d="M3 16v-4l2-1 3-4h8l4 4 1 1v4h-2"/><path d="M9 16h6"/><circle cx="7" cy="16" r="2"/><circle cx="17" cy="16" r="2"/>',
+  heart:'<path d="M12 20s-7-4.4-9-9.2C1.6 7.4 3.8 4 7.2 4c2 0 3.6 1.1 4.8 2.8C13.2 5.1 14.8 4 16.8 4c3.4 0 5.6 3.4 4.2 6.8C19 15.6 12 20 12 20Z"/>',
+  calc:'<rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 7h8M8 12h2M14 12h2M8 16h2M14 16h2"/>',
+  cam:'<path d="M4 8h3l2-3h6l2 3h3v11H4Z"/><circle cx="12" cy="13" r="3.5"/>',
+  pin:'<path d="M12 21s7-6 7-12a7 7 0 1 0-14 0c0 6 7 12 7 12Z"/><circle cx="12" cy="9" r="2.5"/>',
+  bell:'<path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>',
+  search:'<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>',
+  back:'<path d="M15 5l-7 7 7 7"/>',
+  next:'<path d="M9 5l7 7-7 7"/>',
+  share:'<path d="M12 3v12M7 8l5-5 5 5"/><path d="M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"/>',
+  chat:'<path d="M4 20l1.4-4A8 8 0 1 1 8 18.6Z"/><path d="M9 10h6M9 13.5h4"/>',
+  phone:'<path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2Z"/>',
+  check:'<path d="M5 12.5l4.5 4.5L19 7.5"/>',
+  plus:'<path d="M12 5v14M5 12h14"/>'
+};
+const ic = (n, s=22, c='currentColor', w=1.8) => `<svg aria-hidden="true" width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round">${ICON[n]}</svg>`;
+const silhouette = (w) => `<svg aria-hidden="true" width="${w}" height="${Math.round(w*30/64)}" viewBox="0 0 64 30" fill="none" stroke="#878B92" stroke-width="${w>100?1.4:2}" stroke-linejoin="round"><path d="M4 22v-6l6-2 8-8h22l10 8 8 2v6h-4"/><path d="M24 22h16"/><circle cx="16" cy="22" r="5"/><circle cx="48" cy="22" r="5"/><path d="M20 14h28"/></svg>`;
+const dots = n => String(n).replace(/\B(?=(\d{3})+(?!\d))/g,'.');
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+const CARS = [
+  {id:1, name:'BMW X3 2.0d', year:2017, km:179462, fuel:'Diesel', gear:'Manuală', cp:190, cc:1995, euro:'Euro 6', price:14550, body:'SUV', img:'img/bmw-x3.jpg'},
+  {id:2, name:'Dacia Lodgy Stepway', year:2019, km:179769, fuel:'Diesel', gear:'Manuală', cp:116, cc:1461, euro:'Euro 6', price:8450, body:'Monovolum', seats:7, img:'img/dacia-lodgy.jpg'},
+  {id:3, name:'Audi Q5 2.0 TDI', year:2010, km:261944, fuel:'Diesel', gear:'Automată', cp:170, cc:1968, euro:'Euro 4', price:11490, body:'SUV', img:'img/audi-q5.jpg'},
+  {id:4, name:'Opel Zafira 1.6 CDTI', year:2015, km:140061, fuel:'Diesel', gear:'Manuală', cp:136, cc:1598, euro:'Euro 6', price:6450, body:'Monovolum', img:'img/zafira-2015.jpg'},
+  {id:5, name:'Opel Zafira 1.7 CDTI', year:2013, km:249374, fuel:'Diesel', gear:'Manuală', cp:110, cc:1664, euro:'Euro 5', price:3750, body:'Monovolum', seats:7, img:'img/zafira-2013.jpg'}
+];
+const FILTERS = [
+  {k:'all', l:'Toate', f:()=>true},
+  {k:'suv', l:'SUV', f:c=>c.body==='SUV'},
+  {k:'auto', l:'Automată', f:c=>c.gear==='Automată'},
+  {k:'7', l:'7 locuri', f:c=>c.seats===7},
+  {k:'5k', l:'Sub 5.000 €', f:c=>c.price<5000}
+];
+const DOB = 0.15; // dobândă anuală folosită doar ca exemplu în prototip
+const rate = (price, avansPct, luni) => { const P = price*(1-avansPct/100), r = DOB/12; return P<=0 ? 0 : Math.round(P*r/(1-Math.pow(1+r,-luni))); };
+
+let favs = [];
+try { favs = JSON.parse(localStorage.getItem('ar_favs')||'[]'); } catch(e){ favs = []; }
+const saveFavs = () => { try { localStorage.setItem('ar_favs', JSON.stringify(favs)); } catch(e){} };
+
+const S = { tab:'stoc', filter:'all', q:'', detail:null, alerts:0, calc:{car:1, avans:0, luni:60}, photos:[] };
+const app = document.getElementById('app'), scroll = document.getElementById('scroll'), tabsEl = document.getElementById('tabs'), actionsEl = document.getElementById('actions');
+
+function toast(msg){
+  const old = app.querySelector('.toast'); if(old) old.remove();
+  const t = document.createElement('div'); t.className='toast'; t.setAttribute('role','status'); t.textContent = msg;
+  app.appendChild(t); setTimeout(()=>t.remove(), 2600);
+}
+
+function carCard(c){
+  const fav = favs.includes(c.id);
+  return `<div class="card">
+    <button class="card-main" data-open="${c.id}">
+      <div class="thumb"><img src="${c.img}" alt="" loading="lazy"></div>
+      <div class="card-info">
+        <div class="stack" style="gap:3px"><strong>${c.name}</strong><span class="muted num">${c.year} · ${dots(c.km)} km · ${c.gear==='Automată'?'Automată':c.fuel}</span></div>
+        <span class="price num">${dots(c.price)} €</span>
+      </div>
+    </button>
+    <button class="heart" data-fav="${c.id}" aria-pressed="${fav}" aria-label="${fav?'Scoate de la favorite':'Salvează la favorite'}">${ic('heart',20,'currentColor',1.8)}</button>
+  </div>`;
+}
+
+function resultsHTML(){
+  const f = FILTERS.find(x=>x.k===S.filter);
+  const q = S.q.trim().toLowerCase();
+  const list = CARS.filter(f.f).filter(c=>!q || c.name.toLowerCase().includes(q) || String(c.year).includes(q));
+  return `    <div style="display:flex;justify-content:space-between;align-items:baseline">
+      <h2>${S.filter==='all' && !q ? 'Intrate recent' : 'Rezultate'}</h2>
+      <span class="muted num" style="font-size:13px">${list.length} ${list.length===1?'mașină':'mașini'}</span>
+    </div>
+    <div class="stack" style="gap:10px" id="list">
+      ${list.length ? list.map(carCard).join('') : `<div class="empty">Nu avem acum o mașină care să se potrivească.<br>Salvează căutarea și te anunțăm când intră.</div>`}
+    </div>
+    ${(S.filter!=='all' || q) ? `<div class="alertbar"><span>Vrei să afli primul când intră una nouă?</span><button class="pill" style="height:38px" data-act="alert">Anunță-mă</button></div>` : ''}`;
+}
+
+function viewStoc(){
+  const f = FILTERS.find(x=>x.k===S.filter);
+  const q = S.q.trim().toLowerCase();
+  const list = CARS.filter(f.f).filter(c=>!q || c.name.toLowerCase().includes(q) || String(c.year).includes(q));
+  return `<div class="pad stack" style="gap:18px;padding-bottom:24px">
+    <div class="top">
+      <div class="brand"><b>AUTO RULATE</b><span>BACĂU</span></div>
+      <button class="iconbtn" data-act="bell" aria-label="Alerte salvate">${ic('bell',20)}${S.alerts?`<span class="dot">${S.alerts}</span>`:''}</button>
+    </div>
+    <div class="stack" style="gap:4px">
+      <h1 class="disp">Găsește-ți mașina</h1>
+      <p class="muted" style="margin:0">Peste 300 de mașini în 3 parcuri din Bacău</p>
+    </div>
+    <div class="search">
+      <label for="q">${ic('search',18,'#565A60',2)}<span class="vh">Caută mașini</span>
+        <input id="q" type="search" placeholder="Marcă, model sau an" value="${esc(S.q)}" autocomplete="off">
+      </label>
+    </div>
+    <div class="chips" role="group" aria-label="Filtre rapide">
+      ${FILTERS.map(x=>`<button class="chip" data-filter="${x.k}" aria-pressed="${x.k===S.filter}">${x.l}</button>`).join('')}
+    </div>
+    <div class="promo">
+      <div class="stack" style="gap:5px"><span class="disp">Rate cu avans 0, doar cu buletinul</span><small>Aprobăm și clienți cu restanțe</small></div>
+      <div class="promo-row"><small>Garanție 12 luni · Livrare gratuită</small><button class="pill" data-goto="rate">Calculează rata</button></div>
+    </div>
+    <div class="stack" style="gap:18px" id="results">${resultsHTML()}</div>
+  </div>`;
+}
+
+function viewFav(){
+  const list = CARS.filter(c=>favs.includes(c.id));
+  return `<div class="pad stack" style="gap:18px;padding-block:22px 24px">
+    <h1 class="disp">Favorite</h1>
+    <p class="muted" style="margin:0">Te anunțăm dacă scade prețul la o mașină salvată.</p>
+    <div class="stack" style="gap:10px">${list.length ? list.map(carCard).join('') : `<div class="empty">Nu ai salvat nicio mașină.<br>Apasă pe inimă la o mașină din stoc.</div>`}</div>
+  </div>`;
+}
+
+function viewRate(){
+  const c = CARS.find(x=>x.id===S.calc.car);
+  const r = rate(c.price, S.calc.avans, S.calc.luni);
+  return `<div class="pad stack" style="gap:18px;padding-block:22px 24px">
+    <h1 class="disp">Calculează rata</h1>
+    <div class="box stack">
+      <div class="field"><label for="ccar">Mașina</label>
+        <select id="ccar">${CARS.map(x=>`<option value="${x.id}" ${x.id===c.id?'selected':''}>${x.name} · ${dots(x.price)} €</option>`).join('')}</select></div>
+      <div class="field"><label for="cav">Avans: <span class="num">${S.calc.avans}% (${dots(Math.round(c.price*S.calc.avans/100))} €)</span></label>
+        <input id="cav" type="range" min="0" max="50" step="5" value="${S.calc.avans}"></div>
+      <div class="field"><span style="font-size:13px;font-weight:600">Perioada</span>
+        <div class="seg" role="group" aria-label="Perioada în luni">${[12,24,36,48,60].map(n=>`<button data-luni="${n}" aria-pressed="${n===S.calc.luni}">${n} luni</button>`).join('')}</div></div>
+    </div>
+    <div class="result stack">
+      <small>Rata estimată</small>
+      <span class="disp num" id="rval">~${dots(r)} €<span style="font-size:20px"> /lună</span></span>
+      <small>Calcul orientativ. Rata finală o stabilește finanțatorul după analiză. Acceptăm și clienți cu restanțe.</small>
+    </div>
+    <button class="btn-main" data-act="finantare">Cere ofertă de finanțare</button>
+  </div>`;
+}
+
+function viewEval(){
+  const slots = [0,1,2,3].map(i=> S.photos[i] ? `<div class="slot"><img src="${S.photos[i]}" alt="Poza ${i+1}"></div>` : `<div class="slot">${['Față','Spate','Lateral','Interior'][i]}</div>`).join('');
+  return `<div class="pad stack" style="gap:18px;padding-block:22px 24px">
+    <h1 class="disp">Cât îți dăm pe mașina ta</h1>
+    <p class="muted" style="margin:0">Faci 4 poze, completezi câteva date și primești o ofertă de preluare la schimb.</p>
+    <form class="box stack" id="evalform" novalidate>
+      <div class="photos">${slots}</div>
+      <label class="upload" for="pics">${ic('cam',20)} Adaugă poze</label>
+      <input id="pics" type="file" accept="image/*" multiple class="vh">
+      <div class="field"><label for="emm">Marcă și model</label><input id="emm" placeholder="ex. VW Passat 2.0 TDI"></div>
+      <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px">
+        <div class="field"><label for="ean">An</label><input id="ean" inputmode="numeric" placeholder="2014"></div>
+        <div class="field"><label for="ekm">Kilometri</label><input id="ekm" inputmode="numeric" placeholder="210.000"></div>
+      </div>
+      <div class="field"><label for="etel">Telefon</label><input id="etel" type="tel" placeholder="07xx xxx xxx"></div>
+      <button class="btn-main" type="submit">Trimite pentru evaluare</button>
+    </form>
+  </div>`;
+}
+
+function viewParcuri(){
+  const tels = ['0746 401 000','0756 401 000','0799 401 000'];
+  return `<div class="pad stack" style="gap:18px;padding-block:22px 24px">
+    <h1 class="disp">Parcuri și contact</h1>
+    <div class="box stack" style="gap:6px">
+      <strong>Parcul principal</strong>
+      <span class="muted">Loc. Nicolae Bălcescu, DN 2, nr. 1236, Bacău</span>
+      <a class="pill" style="align-self:flex-start;margin-top:8px;text-decoration:none" href="https://www.google.com/maps/search/?api=1&query=Auto+Rulate+Bacau+DN2+1236+Nicolae+Balcescu" target="_blank" rel="noopener">Deschide în hartă</a>
+    </div>
+    <div class="box stack" style="gap:0">
+      ${tels.map(t=>`<div class="contact-row"><span class="num" style="font-weight:600;font-size:16px;user-select:all">${t}</span><button class="copy" data-copy="${t}">Copiază</button></div>`).join('')}
+    </div>
+    <div class="box stack" style="gap:10px">
+      <strong>Program</strong>
+      <div class="hours num"><span>Luni – Vineri</span><span>08:30 – 17:30</span><span>Sâmbătă</span><span>08:30 – 13:00</span><span>Duminică</span><span>09:00 – 13:30</span></div>
+    </div>
+  </div>`;
+}
+
+function viewDetail(){
+  const c = CARS.find(x=>x.id===S.detail);
+  const fav = favs.includes(c.id);
+  const specs = [['An',c.year],['Rulaj',dots(c.km)+' km'],['Carburant',c.fuel],['Cutie',c.gear],['Motor',dots(c.cc)+' cm³'],['Normă',c.euro]];
+  return `<div class="hero"><img src="${c.img}" alt="${c.name}, fotografie din parc">
+      <div class="hero-nav">
+        <button class="iconbtn" data-act="back" aria-label="Înapoi">${ic('back',20,'#15171A',2)}</button>
+        <div style="display:flex;gap:10px">
+          <button class="iconbtn" data-act="share" aria-label="Trimite unui prieten">${ic('share',19)}</button>
+          <button class="iconbtn heart" style="position:static;background:#fff" data-fav="${c.id}" aria-pressed="${fav}" aria-label="${fav?'Scoate de la favorite':'Salvează la favorite'}">${ic('heart',20)}</button>
+        </div>
+      </div>
+    </div>
+    <div class="pad stack sheet-top">
+      <div class="badges"><span class="badge dark">Garanție 12 luni</span><span class="badge">Livrare gratuită în țară</span></div>
+      <div class="title-row">
+        <div class="stack" style="gap:4px"><h1 class="disp" style="font-size:34px">${c.name}</h1><span class="muted">${c.cp} CP · ${c.euro}${c.seats?` · ${c.seats} locuri`:''}</span></div>
+        <div class="stack" style="align-items:flex-end;gap:2px"><span class="price num" style="font-size:32px">${dots(c.price)} €</span>
+          <button class="linkbtn" data-ratefor="${c.id}">sau ~${dots(rate(c.price,0,60))} €/lună, avans 0</button></div>
+      </div>
+      <div class="specs">${specs.map(s=>`<div class="spec"><span>${s[0]}</span><b class="num">${s[1]}</b></div>`).join('')}</div>
+      <button class="tile" data-goto="eval">
+        <span class="ico">${ic('cam',22)}</span>
+        <span class="stack" style="flex:1;gap:2px"><b>Ai o mașină de dat la schimb?</b><span class="muted" style="font-size:13px">Faci 4 poze și îți spunem cât îți dăm pe ea</span></span>
+        <span class="go">${ic('next',18,'#fff',2)}</span>
+      </button>
+    </div>`;
+}
+
+function render(){
+  const inDetail = S.detail !== null;
+  const views = {stoc:viewStoc, fav:viewFav, rate:viewRate, eval:viewEval, parc:viewParcuri};
+  scroll.innerHTML = inDetail ? viewDetail() : views[S.tab]();
+  tabsEl.hidden = inDetail;
+  actionsEl.hidden = !inDetail;
+  if (inDetail){
+    const c = CARS.find(x=>x.id===S.detail);
+    const wa = 'https://api.whatsapp.com/send?phone=40746401000&text=' + encodeURIComponent('Bună ziua, mă interesează ' + c.name + ' ' + c.year + ' de ' + dots(c.price) + ' €.');
+    actionsEl.innerHTML = `<button class="btn-main" data-act="testdrive">Programează test drive</button>
+      <a class="btn-sq" href="${wa}" target="_blank" rel="noopener" aria-label="Scrie-ne pe WhatsApp">${ic('chat',22)}</a>
+      <button class="btn-sq" data-goto="parc" aria-label="Sună la parc">${ic('phone',21)}</button>`;
+  }
+  const T = [['stoc','Stoc','car'],['fav','Favorite','heart'],['rate','Rate','calc'],['eval','Evaluare','cam'],['parc','Parcuri','pin']];
+  tabsEl.innerHTML = T.map(t=>`<button class="tab" data-tab="${t[0]}" ${t[0]===S.tab?'aria-current="page"':''}>${ic(t[2],22)}${t[1]}${t[0]==='fav'&&favs.length?` (${favs.length})`:''}</button>`).join('');
+  bindInputs();
+}
+
+function bindInputs(){
+  const q = document.getElementById('q');
+  if (q) q.addEventListener('input', e => { S.q = e.target.value; document.getElementById('results').innerHTML = resultsHTML(); });
+  const ccar = document.getElementById('ccar');
+  if (ccar) ccar.addEventListener('change', e => { S.calc.car = +e.target.value; render(); });
+  const cav = document.getElementById('cav');
+  if (cav) cav.addEventListener('input', e => { S.calc.avans = +e.target.value; const keep = scroll.scrollTop; render(); scroll.scrollTop = keep; document.getElementById('cav').focus(); });
+  const pics = document.getElementById('pics');
+  if (pics) pics.addEventListener('change', e => {
+    const files = Array.from(e.target.files||[]).slice(0, 4 - S.photos.length);
+    let left = files.length; if(!left) return;
+    files.forEach(f => { const r = new FileReader(); r.onload = () => { S.photos.push(r.result); if(--left===0){ const keep = scroll.scrollTop; render(); scroll.scrollTop = keep; } }; r.readAsDataURL(f); });
+  });
+  const ef = document.getElementById('evalform');
+  if (ef) ef.addEventListener('submit', e => { e.preventDefault(); const tel = document.getElementById('etel').value.trim(); if(tel.replace(/\D/g,'').length<10){ toast('Scrie un număr de telefon ca să te putem suna.'); document.getElementById('etel').focus(); return; } doneSheet('Am primit mașina ta','Un coleg se uită pe poze și te sună cu oferta de preluare.'); S.photos=[]; });
+}
+
+function openSheet(html){
+  closeSheet();
+  const b = document.createElement('div'); b.className='backdrop'; b.addEventListener('click', closeSheet);
+  const s = document.createElement('div'); s.className='sheet pad stack'; s.setAttribute('role','dialog'); s.setAttribute('aria-modal','true');
+  s.innerHTML = '<div class="grab" aria-hidden="true"></div>' + html;
+  app.append(b, s);
+  const first = s.querySelector('button, input'); if (first) first.focus();
+  return s;
+}
+function closeSheet(){ app.querySelectorAll('.backdrop,.sheet').forEach(x=>x.remove()); }
+function doneSheet(title, text){
+  openSheet(`<div class="stack done"><div class="ok">${ic('check',32,'#fff',2.4)}</div><h2 class="disp" style="font-size:28px">${title}</h2><p class="muted" style="margin:0;max-width:30ch">${text}</p><p class="demo-note" style="margin:0">În prototip nu se trimite nimic.</p><button class="btn-main" style="width:100%;margin-top:8px" data-act="close">Gata</button></div>`);
+}
+
+function contactSheet(title, sub, extra, onOk){
+  const s = openSheet(`<div class="stack" style="gap:4px"><h2 class="disp" style="font-size:28px">${title}</h2><span class="muted" style="font-size:14px">${sub}</span></div>
+    ${extra||''}
+    <div class="field"><label for="sname">Nume</label><input id="sname" autocomplete="name" placeholder="Numele tău"></div>
+    <div class="field"><label for="stel">Telefon</label><input id="stel" type="tel" autocomplete="tel" placeholder="07xx xxx xxx"></div>
+    <button class="btn-main" data-act="send">Trimite</button>`);
+  s.addEventListener('click', e => {
+    const d = e.target.closest('[data-day]'), t = e.target.closest('[data-time]');
+    if (d){ s.querySelectorAll('[data-day]').forEach(x=>x.setAttribute('aria-pressed', x===d)); }
+    if (t){ s.querySelectorAll('[data-time]').forEach(x=>x.setAttribute('aria-pressed', x===t)); }
+    if (e.target.closest('[data-act="send"]')){
+      e.stopPropagation();
+      const tel = s.querySelector('#stel').value.trim();
+      if (tel.replace(/\D/g,'').length < 10){ toast('Scrie un număr de telefon valid.'); s.querySelector('#stel').focus(); return; }
+      onOk(s);
+    }
+  });
+}
+
+function testDrive(){
+  const c = CARS.find(x=>x.id===S.detail);
+  const W = ['Dum','Lun','Mar','Mie','Joi','Vin','Sâm'];
+  const days = Array.from({length:6},(_,i)=>{ const d=new Date(); d.setDate(d.getDate()+i+1); return {lbl: i===0?'Mâine':W[d.getDay()], n:d.getDate(), sun:d.getDay()===0}; });
+  const extra = `<div class="field"><span style="font-size:13px;font-weight:600">Ziua</span><div class="days">${days.map((d,i)=>`<button data-day="${i}" aria-pressed="${i===0}"><span>${d.lbl}</span><b class="num">${d.n}</b></button>`).join('')}</div></div>
+    <div class="field"><span style="font-size:13px;font-weight:600">Ora</span><div class="times">${['09:00','11:00','13:00','16:00'].map((t,i)=>`<button data-time="${t}" aria-pressed="${i===1}">${t}</button>`).join('')}</div></div>`;
+  contactSheet('Test drive', c.name + ' · ' + dots(c.price) + ' €', extra, s => {
+    const day = s.querySelector('[data-day][aria-pressed="true"]'), time = s.querySelector('[data-time][aria-pressed="true"]');
+    const di = +day.dataset.day;
+    doneSheet('Te așteptăm la parc', `${days[di].lbl} ${days[di].n}, ora ${time.dataset.time}. Mașina e pregătită când ajungi.`);
+  });
+}
+
+app.addEventListener('click', async e => {
+  const el = e.target.closest('[data-tab],[data-filter],[data-open],[data-fav],[data-goto],[data-act],[data-luni],[data-ratefor],[data-copy]');
+  if (!el || el.closest('.sheet') && !el.matches('[data-act="close"]')) return;
+  const keep = scroll.scrollTop;
+  if (el.dataset.tab){ S.tab = el.dataset.tab; S.detail = null; render(); scroll.scrollTop = 0; return; }
+  if (el.dataset.filter){ S.filter = el.dataset.filter; render(); scroll.scrollTop = keep; return; }
+  if (el.dataset.open){ S.detail = +el.dataset.open; render(); scroll.scrollTop = 0; return; }
+  if (el.dataset.fav){
+    const id = +el.dataset.fav, i = favs.indexOf(id);
+    if (i>=0) favs.splice(i,1); else { favs.push(id); toast('Salvată. Te anunțăm dacă scade prețul.'); }
+    saveFavs(); render(); scroll.scrollTop = keep; return;
+  }
+  if (el.dataset.goto){ S.tab = el.dataset.goto; S.detail = null; render(); scroll.scrollTop = 0; return; }
+  if (el.dataset.ratefor){ S.calc = {car:+el.dataset.ratefor, avans:0, luni:60}; S.tab='rate'; S.detail=null; render(); scroll.scrollTop = 0; return; }
+  if (el.dataset.luni){ S.calc.luni = +el.dataset.luni; render(); scroll.scrollTop = keep; return; }
+  if (el.dataset.copy){
+    try { await navigator.clipboard.writeText(el.dataset.copy); toast('Număr copiat: ' + el.dataset.copy); }
+    catch(_){ const r = document.createRange(); r.selectNodeContents(el.previousElementSibling); const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r); toast('Numărul e selectat, copiază-l manual.'); }
+    return;
+  }
+  switch(el.dataset.act){
+    case 'back': S.detail = null; render(); return;
+    case 'close': closeSheet(); return;
+    case 'bell': toast(S.alerts ? `Ai ${S.alerts} ${S.alerts===1?'alertă salvată':'alerte salvate'}. Te anunțăm când intră o mașină potrivită.` : 'Alege un filtru și apasă „Anunță-mă” ca să primești alerte.'); return;
+    case 'alert': S.alerts++; render(); scroll.scrollTop = keep; toast('Alertă salvată. Primești notificare când intră o mașină potrivită.'); return;
+    case 'share': toast('Aici se deschide meniul de trimis pe WhatsApp sau Messenger.'); return;
+    case 'testdrive': testDrive(); return;
+    case 'finantare': {
+      const c = CARS.find(x=>x.id===S.calc.car);
+      contactSheet('Ofertă de finanțare', `${c.name} · avans ${S.calc.avans}% · ${S.calc.luni} luni`, '<p class="muted" style="margin:0;font-size:14px">Ai nevoie doar de buletin. Analizăm și dosarele cu restanțe.</p>', () => doneSheet('Cererea a ajuns la noi', 'Te sună un consultant cu oferta de rate, de obicei în aceeași zi.'));
+      return;
+    }
+  }
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSheet(); });
+
+render();
+})();
+</script>
+
+</body>
+</html>
